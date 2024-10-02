@@ -145,4 +145,16 @@ public class BookService {
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
     }
+
+    // | `GET` | `/books/{id}/availability` | Check if a book is available for loan
+    // |
+    // Check if a book is available for loan
+    @GET
+    @Path("/{id}/availability")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean isBookAvailable(@PathParam("id") Long id) {
+        return bookRepository.findById(id)
+                .map(book -> book.getAvailableCopies() > 0)
+                .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
+    }
 }

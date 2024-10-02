@@ -1,5 +1,7 @@
 # 📚 Book Management Service
 
+![img](https://media.discordapp.net/attachments/715600275502531146/1291054314458058884/books.jpg?ex=66feb387&is=66fd6207&hm=decde47b65bcc47f04313fb2283bc56201eeef9954c8a68bd4ebe3c6007770cc&=&format=webp&width=1440&height=246)
+
 ## Overview
 
 The **Book Management Service** is a RESTful web service built with **Spring Boot** that handles all book-related operations in a library management system. It provides endpoints to manage books, including adding, updating, deleting, and searching for books in the system. This service is part of a larger **Service-Oriented Architecture (SOA)** for a library system and can communicate with other services like Loan Management and User Management.
@@ -24,15 +26,19 @@ The **Book Management Service** is a RESTful web service built with **Spring Boo
 
 ## Endpoints
 
-| HTTP Method | Endpoint                   | Description                                   |
-| ----------- | -------------------------- | --------------------------------------------- |
-| `POST`      | `/books`                   | Add a new book                                |
-| `GET`       | `/books`                   | Get a list of all books                       |
-| `GET`       | `/books/{id}`              | Get details of a specific book by ID          |
-| `GET`       | `/books/search`            | Search books by title, author, genre, or ISBN |
-| `PUT`       | `/books/{id}`              | Update book details                           |
-| `DELETE`    | `/books/{id}`              | Delete a book by ID                           |
-| `GET`       | `/books/{id}/availability` | Check if a book is available for loan         |
+| HTTP Method | Endpoint                   | Description                               |
+| ----------- | -------------------------- | ----------------------------------------- |
+| `POST`      | `/books`                   | Add a new book                            |
+| `GET`       | `/books/all`               | Get a list of all books                   |
+| `GET`       | `/books/{id}`              | Get details of a specific book by ID      |
+| `GET`       | `/books/search/{keyword}`  | Search books by title or genre            |
+| `GET`       | `/books/isbn/{isbn}`       | Search books by ISBN                      |
+| `GET`       | `/books/author/{author}`   | Search books by author                    |
+| `PUT`       | `/books/{id}`              | Update book details                       |
+| `DELETE`    | `/books/{id}`              | Delete a book by ID                       |
+| `GET`       | `/books/{id}/availability` | Check if a book is available for loan     |
+| `PUT`       | `/books/lend/{id}`         | Lend a book (reduce available copies)     |
+| `PUT`       | `/books/return/{id}`       | Return a book (increase available copies) |
 
 ## Book Object
 
@@ -87,19 +93,19 @@ The **Book** object is the core entity of the Book Management Service. Below are
 
 -   Java 17+
 -   Maven 3.x
--   (Optional) MySQL/PostgreSQL for persistent storage
+-   MySQL for persistent storage
 
 ### Setup
 
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/your-username/book-management-service.git
-    cd book-management-service
+    git clone https://github.com/Yassinekrn/book_management_web_service.git
+    cd book_management_web_service
     ```
 
 2. **Update application properties:**
-   If using MySQL/PostgreSQL, update the database connection in `src/main/resources/application.properties`:
+   If using H2/PostgreSQL, update the database connection in `src/main/resources/application.properties`:
 
     ```properties
     spring.datasource.url=jdbc:mysql://localhost:3306/library
@@ -145,20 +151,9 @@ You can use tools like **Postman** or **curl** to test the endpoints:
 
 By default, the application uses **MySQL**, but it can be easily configured to use **PostgreSQL** or **H2** according to your personal needs. Just update the `application.properties` file accordingly.
 
-## Testing
-
-Unit tests and integration tests are included to validate the core functionality of the service.
-
-To run tests:
-
-```bash
-mvn test
-```
-
 ## Future Improvements
 
--   Add pagination for large book collections.
--   Implement advanced search with filters (e.g., by published year or genre).
+-   Implement advanced search with filters.
 -   Add support for book reservations.
 
 ## Contributing
