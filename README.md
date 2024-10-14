@@ -1,6 +1,6 @@
 # 📚 Book Management Service
 
-![img](https://media.discordapp.net/attachments/715600275502531146/1291054314458058884/books.jpg?ex=66feb387&is=66fd6207&hm=decde47b65bcc47f04313fb2283bc56201eeef9954c8a68bd4ebe3c6007770cc&=&format=webp&width=1440&height=246)
+![img](https://media.discordapp.net/attachments/715600275502531146/1291054314458058884/books.jpg?ex=670ddcc7&is=670c8b47&hm=2c3c574817b472573f1a94c0cf3ddc692695ea2d97d2943cf3727b0b576eea96&=&format=webp&width=1440&height=245)
 
 ## Overview
 
