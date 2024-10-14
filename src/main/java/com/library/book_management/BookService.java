@@ -12,11 +12,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
 
 import java.util.List;
 import java.util.Optional;
 
-// @Service
 @Path("/books")
 public class BookService {
 
@@ -27,20 +28,23 @@ public class BookService {
     @GET
     @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public Response getAllBooks() {
+        List<Book> books = bookRepository.findAll();
+        return Response.ok(books).build(); // Return 200 OK with book list
     }
 
     // Find a book by ID
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Book getBookById(@PathParam("id") Long id) {
+    public Response getBookById(@PathParam("id") Long id) {
         Optional<Book> book = bookRepository.findById(id);
         if (book.isPresent()) {
-            return book.get();
+            return Response.ok(book.get()).build(); // Return 200 OK
         } else {
-            throw new IllegalArgumentException("Book with ID " + id + " not found.");
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Book with ID " + id + " not found.")
+                    .build(); // Return 404 Not Found
         }
     }
 
@@ -48,36 +52,31 @@ public class BookService {
     @GET
     @Path("/isbn/{isbn}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Book getBookByIsbn(@PathParam("isbn") String isbn) {
-        return bookRepository.findByIsbn(isbn)
-                .orElseThrow(() -> new IllegalArgumentException("Book with ISBN " + isbn + " not found."));
-    }
-
-    // Search books by title or genre
-    @GET
-    @Path("/search/{keyword}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Book> searchBooks(@PathParam("keyword") String keyword) {
-        return bookRepository.findByTitleContainingIgnoreCaseOrGenreContainingIgnoreCase(keyword, keyword);
-    }
-
-    // Find books by author
-    @GET
-    @Path("/author/{author}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Book> getBooksByAuthor(@PathParam("author") String author) {
-        return bookRepository.findByAuthorContainingIgnoreCase(author);
+    public Response getBookByIsbn(@PathParam("isbn") String isbn) {
+        Optional<Book> book = bookRepository.findByIsbn(isbn);
+        if (book.isPresent()) {
+            return Response.ok(book.get()).build(); // Return 200 OK
+        } else {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Book with ISBN " + isbn + " not found.")
+                    .build(); // Return 404 Not Found
+        }
     }
 
     // Add a new book
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Book addBook(Book book) {
+    public Response addBook(Book book) {
         if (bookRepository.findByIsbn(book.getIsbn()).isPresent()) {
-            throw new IllegalArgumentException("A book with the ISBN " + book.getIsbn() + " already exists.");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("A book with the ISBN " + book.getIsbn() + " already exists.")
+                    .build(); // Return 400 Bad Request
         }
-        return bookRepository.save(book);
+        Book savedBook = bookRepository.save(book);
+        return Response.status(Response.Status.CREATED)
+                .entity(savedBook)
+                .build(); // Return 201 Created
     }
 
     // Update an existing book
@@ -85,76 +84,92 @@ public class BookService {
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Book updateBook(@PathParam("id") Long id, Book updatedBook) {
-        return bookRepository.findById(id)
-                .map(existingBook -> {
-                    existingBook.setTitle(updatedBook.getTitle());
-                    existingBook.setAuthor(updatedBook.getAuthor());
-                    existingBook.setIsbn(updatedBook.getIsbn());
-                    existingBook.setGenre(updatedBook.getGenre());
-                    existingBook.setPublishedYear(updatedBook.getPublishedYear());
-                    existingBook.setPublisher(updatedBook.getPublisher());
-                    existingBook.setDescription(updatedBook.getDescription());
-                    existingBook.setTotalCopies(updatedBook.getTotalCopies());
-                    existingBook.setAvailableCopies(updatedBook.getAvailableCopies());
-                    return bookRepository.save(existingBook);
-                })
-                .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
+    public Response updateBook(@PathParam("id") Long id, Book updatedBook) {
+        Optional<Book> bookOpt = bookRepository.findById(id);
+        if (bookOpt.isPresent()) {
+            Book existingBook = bookOpt.get();
+            existingBook.setTitle(updatedBook.getTitle());
+            existingBook.setAuthor(updatedBook.getAuthor());
+            existingBook.setIsbn(updatedBook.getIsbn());
+            existingBook.setGenre(updatedBook.getGenre());
+            existingBook.setPublishedYear(updatedBook.getPublishedYear());
+            existingBook.setPublisher(updatedBook.getPublisher());
+            existingBook.setDescription(updatedBook.getDescription());
+            existingBook.setTotalCopies(updatedBook.getTotalCopies());
+            existingBook.setAvailableCopies(updatedBook.getAvailableCopies());
+            Book savedBook = bookRepository.save(existingBook);
+            return Response.ok(savedBook).build(); // Return 200 OK
+        } else {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Book with ID " + id + " not found.")
+                    .build(); // Return 404 Not Found
+        }
     }
 
     // Delete a book by ID
     @DELETE
     @Path("/{id}")
-    public void deleteBook(@PathParam("id") Long id) {
+    public Response deleteBook(@PathParam("id") Long id) {
         if (!bookRepository.existsById(id)) {
-            throw new IllegalArgumentException("Book with ID " + id + " does not exist.");
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Book with ID " + id + " does not exist.")
+                    .build(); // Return 404 Not Found
         }
         bookRepository.deleteById(id);
+        return Response.noContent().build(); // Return 204 No Content
     }
 
     // Lend a book (reduce available copies)
     @PUT
     @Path("/lend/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Book lendBook(@PathParam("id") Long id) {
+    public Response lendBook(@PathParam("id") Long id) {
         return bookRepository.findById(id)
                 .map(book -> {
                     if (book.getAvailableCopies() > 0) {
                         book.setAvailableCopies(book.getAvailableCopies() - 1);
-                        return bookRepository.save(book);
+                        return Response.ok(bookRepository.save(book)).build(); // Return 200 OK
                     } else {
-                        throw new IllegalArgumentException("No available copies for book ID " + id);
+                        return Response.status(Response.Status.BAD_REQUEST)
+                                .entity("No available copies for book ID " + id)
+                                .build(); // Return 400 Bad Request
                     }
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
+                .orElse(Response.status(Response.Status.NOT_FOUND)
+                        .entity("Book with ID " + id + " not found.")
+                        .build()); // Return 404 Not Found
     }
 
     // Return a book (increase available copies)
     @PUT
     @Path("/return/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Book returnBook(@PathParam("id") Long id) {
+    public Response returnBook(@PathParam("id") Long id) {
         return bookRepository.findById(id)
                 .map(book -> {
                     if (book.getAvailableCopies() < book.getTotalCopies()) {
                         book.setAvailableCopies(book.getAvailableCopies() + 1);
-                        return bookRepository.save(book);
+                        return Response.ok(bookRepository.save(book)).build(); // Return 200 OK
                     } else {
-                        throw new IllegalArgumentException("All copies of book ID " + id + " are already available.");
+                        return Response.status(Response.Status.BAD_REQUEST)
+                                .entity("All copies of book ID " + id + " are already available.")
+                                .build(); // Return 400 Bad Request
                     }
                 })
-                .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
+                .orElse(Response.status(Response.Status.NOT_FOUND)
+                        .entity("Book with ID " + id + " not found.")
+                        .build()); // Return 404 Not Found
     }
 
-    // | `GET` | `/books/{id}/availability` | Check if a book is available for loan
-    // |
     // Check if a book is available for loan
     @GET
     @Path("/{id}/availability")
     @Produces(MediaType.APPLICATION_JSON)
-    public boolean isBookAvailable(@PathParam("id") Long id) {
+    public Response isBookAvailable(@PathParam("id") Long id) {
         return bookRepository.findById(id)
-                .map(book -> book.getAvailableCopies() > 0)
-                .orElseThrow(() -> new IllegalArgumentException("Book with ID " + id + " not found."));
+                .map(book -> Response.ok(book.getAvailableCopies() > 0).build()) // Return 200 OK with boolean
+                .orElse(Response.status(Response.Status.NOT_FOUND)
+                        .entity("Book with ID " + id + " not found.")
+                        .build()); // Return 404 Not Found
     }
 }
