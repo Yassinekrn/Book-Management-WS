@@ -1,7 +1,5 @@
 # 📚 Book Management Service
 
-![img](https://media.discordapp.net/attachments/715600275502531146/1291054314458058884/books.jpg?ex=670ddcc7&is=670c8b47&hm=2c3c574817b472573f1a94c0cf3ddc692695ea2d97d2943cf3727b0b576eea96&=&format=webp&width=1440&height=245)
-
 ## Overview
 
 The **Book Management Service** is a RESTful web service built with **Spring Boot** that handles all book-related operations in a library management system. It provides endpoints to manage books, including adding, updating, deleting, and searching for books in the system. This service is part of a larger **Service-Oriented Architecture (SOA)** for a library system and can communicate with other services like Loan Management and User Management.
